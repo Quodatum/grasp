@@ -1,4 +1,4 @@
-xquery version "3.0" encoding "utf-8";
+xquery version "1.0" encoding "utf-8";
 
 (:
  : Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +15,21 @@ xquery version "3.0" encoding "utf-8";
  :)
 
 (:~
- : This library module provides MarkLogic spcific XQuery implementation features
+ : This library module provides BaseX specific XQuery implementation features
  : such as HTTP GET and POST requests and XML parsing.
- : @author Philip A. R. Fennell
+ : @author Andy Bunce
  :)
 
-module namespace impl = "http://www.marklogic.com/http";
+module namespace impl = "http://basex.org/http";
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
 declare default element namespace "http://www.w3.org/Protocols/rfc2616"; 
 
-declare namespace http = "http://www.w3.org/Protocols/rfc2616"; 
-declare namespace xhttp = "xdmp:http";
+declare namespace http = "http://expath.org/ns/http-client"; 
+
 
 (:~ URL encoding for HTTP requests. :)
-declare variable $URL_ENCODED 	as xs:string := "application/x-www-form-urlencoded";
+declare variable $impl:URL_ENCODED 	as xs:string := "application/x-www-form-urlencoded";
 
 
 (:~
@@ -40,17 +40,7 @@ declare variable $URL_ENCODED 	as xs:string := "application/x-www-form-urlencode
 declare function impl:http-request($request as element(http:request))
 				as item()*
 {
-	let $requestURI as xs:string := $request/@href
-	let $method as xs:string := $request/@method
-	let $log := xdmp:log(concat('[XQuery][GRASP] Request:&#10;', xdmp:quote($request)), 'debug')
-	let $response as item()* := 
-		xdmp:apply(
-			xdmp:function(xs:QName(concat('xdmp:http-', lower-case($method)))), 
-			$requestURI, 
-			impl:build-request-options($request)
-		)
-	return
-		$response
+http:send-request($request)
 };
 
 
@@ -63,17 +53,7 @@ declare function impl:http-request($request as element(http:request))
 declare function impl:normalise-response($response as item()*) 
 	as element(http:response) 
 {
-	<response status="{string(impl:get-response-head($response)/xhttp:code)}">{
-		(for $header in impl:get-response-head($response)/xhttp:headers/xhttp:*
-		return
-			<header name="{local-name($header)}" value="{string($header)}"/>),
-		if (exists(impl:get-response-body($response))) then 
-			<body content-type="{subsequence(tokenize(string(impl:get-response-head($response)/xhttp:headers/xhttp:content-type), ';'), 1, 1)}">{
-				impl:get-response-body($response)
-			}</body>
-		else
-			()
-	}</response>
+$response
 }; 
 
 
@@ -85,7 +65,7 @@ declare function impl:normalise-response($response as item()*)
 declare function impl:unquote($string as xs:string) 
 		as document-node() 
 {
-	xdmp:unquote($string)
+	fn:parse-xml($string)
 }; 
 
 
@@ -97,34 +77,11 @@ declare function impl:unquote($string as xs:string)
 declare function impl:quote($node as node()) 
 		as xs:string 
 {
-	xdmp:quote($node)
+	fn:serialize($node)
 }; 
 
 
 
-(:~
- : Creates the HTTP Request options XML fragment
- : @param $accept the HTTP Accept header content-type.
- : @return options element
- :)
-declare function impl:build-request-options($request as element(http:request)) 
-		as element(xhttp:options) 
-{
-	<options xmlns="xdmp:http">
-		<headers>{
-			for $header in $request//http:header
-			return
-				element {QName('xdmp:http', string($header/@name))} {text {string($header/@value)}}
-		}</headers>
-		<format xmlns="xdmp:document-get">text</format>
-		{
-		if (exists($request/http:body)) then 
-			<data xmlns="xdmp:http">{xdmp:quote($request/http:body/*)}</data>
-		else
-			()
-		}
-	</options>
-};
 
 
 (:~
@@ -133,7 +90,7 @@ declare function impl:build-request-options($request as element(http:request))
  : @return the head of the HTTP response data.
  :)
 declare function impl:get-response-head($response as item()*) 
-		as element(xhttp:response)
+		as element(http:response)
 {
 	subsequence($response, 1, 1)
 };
@@ -147,10 +104,6 @@ declare function impl:get-response-head($response as item()*)
 declare function impl:get-response-body($response as item()*) 
 		as item()?
 {
-	try {
-		xdmp:unquote(subsequence($response, 2))
-	} catch ($e) {
 		subsequence($response, 2, 1)
-	}
 };
 

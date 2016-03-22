@@ -24,19 +24,19 @@ xquery version "1.0" encoding "utf-8";
 
 module namespace gsp = "http://www.w3.org/TR/sparql11-http-rdf-update/";
 
-import module namespace impl = "http://www.marklogic.com/http" at
-		"lib-ml.xqy"; 
+import module namespace impl = "http://basex.org/http" at
+		"lib-basex.xqy"; 
 
 declare default function namespace "http://www.w3.org/2005/xpath-functions";
-declare namespace http = "http://www.w3.org/Protocols/rfc2616"; 
+declare namespace http = "http://expath.org/ns/http-client"; 
 
 (:~ User-agent string. :) 
-declare variable $USER_AGENT	as xs:string := "xqy-graph-store-http-protocol-client/0.3";
+declare variable $gsp:USER_AGENT	as xs:string := "xqy-graph-store-http-protocol-client/0.3";
 
 (:~ MIME-Types. :)
-declare variable $RDF_XML 		as xs:string := "application/rdf+xml";
-declare variable $NTRIPLES 		as xs:string := "text/plain";
-declare variable $TURTLE 		as xs:string := "text/turtle";
+declare variable $gsp:RDF_XML 		as xs:string := "application/rdf+xml";
+declare variable $gsp:NTRIPLES 		as xs:string := "text/plain";
+declare variable $gsp:TURTLE 		as xs:string := "text/turtle";
 
 
 (:~
@@ -78,7 +78,7 @@ declare (: private :) function gsp:retrieve-graph-metainfo($uri as xs:string,
 {
 	impl:normalise-response(
 			impl:http-request(gsp:submission('HEAD', $uri, 
-					$default, $graphURI, $RDF_XML, ())))
+					$default, $graphURI, $gsp:RDF_XML, ())))
 };
 
 
@@ -90,7 +90,7 @@ declare (: private :) function gsp:retrieve-graph-metainfo($uri as xs:string,
 declare function gsp:retrieve-default-graph($uri as xs:string) 
 						as element(http:response)
 {
-	gsp:retrieve-graph($uri, true(), (), $RDF_XML)
+	gsp:retrieve-graph($uri, true(), (), $gsp:RDF_XML)
 };
 
 
@@ -118,7 +118,7 @@ declare function gsp:retrieve-named-graph($uri as xs:string,
 		$graphURI as xs:string) 
 				as element(http:response)
 {
-	gsp:retrieve-graph($uri, (), $graphURI, $RDF_XML)
+	gsp:retrieve-graph($uri, (), $graphURI, $gsp:RDF_XML)
 };
 
 
@@ -199,7 +199,7 @@ declare (: private :) function gsp:merge-graph($uri as xs:string, $default as xs
 {
 	impl:normalise-response(
 			impl:http-request(gsp:submission('POST', $uri, $default, $graphURI, 
-					$RDF_XML, $graphContent)))
+					$gsp:RDF_XML, $graphContent)))
 };
 
 
@@ -242,7 +242,7 @@ declare (: private :) function gsp:add-graph($uri as xs:string,
 {
 	impl:normalise-response(
 			impl:http-request(gsp:submission('PUT', $uri, $default, $graphURI, 
-					$RDF_XML, $graphContent)))
+					$gsp:RDF_XML, $graphContent)))
 };
 
 
@@ -287,7 +287,7 @@ declare (: private :) function gsp:delete-graph($uri as xs:string, $default as x
 {
 	impl:normalise-response(
 			impl:http-request(gsp:submission('DELETE', $uri, $default, 
-					$graphURI, $RDF_XML, ())))
+					$graphURI, $gsp:RDF_XML, ())))
 };
 
 
@@ -350,16 +350,16 @@ declare (: private :) function gsp:submission($method as xs:string, $uri as xs:s
 				'The default and graph parameters cannot be used together.'
 			)
 		else
-			<request xmlns="http://www.w3.org/Protocols/rfc2616" method="{$method}" 
+			<request xmlns= "http://expath.org/ns/http-client" method="{$method}" 
 					href="{concat($uri, if (exists($requestParams)) then concat('?', $requestParams) else '')}">
 				<header name="accept" value="{$mediaType}"/>
-				<header name="user-agent" value="{$USER_AGENT}"/>
-				<header name="content-type" value="{$RDF_XML}"/>
+				<header name="user-agent" value="{$gsp:USER_AGENT}"/>
+				<header name="content-type" value="{$gsp:RDF_XML}"/>
 				<header name="encoding" value="UTF-8"/>
 				{
 					if (exists($graphContent)) then  
 						<body xmlns="http://www.w3.org/Protocols/rfc2616" 
-								content-type="{$RDF_XML}">{$graphContent}</body>
+								content-type="{$gsp:RDF_XML}">{$graphContent}</body>
 					else
 						()
 				}

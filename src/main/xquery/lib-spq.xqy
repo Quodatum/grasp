@@ -23,8 +23,8 @@ xquery version "1.0" encoding "utf-8";
 
 module namespace spq = "http://www.w3.org/TR/sparql11-protocol/";
 
-import module namespace impl = "http://www.marklogic.com/http" at
-		"lib-ml.xqy"; 
+import module namespace impl = "http://basex.org/http" at
+		"lib-basex.xqy"; 
 
 declare namespace http	= "http://www.w3.org/Protocols/rfc2616"; 
 declare namespace sr 	= "http://www.w3.org/2005/sparql-results#"; 

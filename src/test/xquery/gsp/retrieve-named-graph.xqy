@@ -1,4 +1,4 @@
-xquery version "1.0-ml" encoding "utf-8";
+xquery version "3.0" encoding "utf-8";
 
 import module namespace gsp = "http://www.w3.org/TR/sparql11-http-rdf-update/" at
 		"main/xquery/lib-gsp.xqy"; 
